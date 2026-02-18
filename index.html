@@ -19,8 +19,9 @@
         .btn-del-req { font-size: 11px; color: #ff5252; background: none; border: 1px solid #ff5252; padding: 4px 8px; cursor: pointer; border-radius: 5px; }
         .notice-card { border-left: 5px solid #ff9800 !important; background: #fffaf0 !important; }
         .notice-tag { color: #ff9800; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
-        .admin-link { margin-top: 40px; font-size: 12px; color: #ddd; cursor: pointer; text-align: center; }
-        #adminArea { display:none; width: 100%; }
+        /* 관리자 링크 스타일 */
+        .admin-link { margin-top: 40px; font-size: 13px; color: #bbb; cursor: pointer; text-align: center; text-decoration: underline; }
+        #adminArea { display:none; width: 100%; margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 12px; }
         hr { margin: 30px 0; border: 0; border-top: 1px solid #eee; }
     </style>
 </head>
@@ -38,10 +39,11 @@
     <input type="password" id="myPw" placeholder="나만 아는 비밀번호 입력">
     <button class="btn-read" onclick="readMsg()">보안 열람하기</button>
     <div id="display"></div>
-    <div class="admin-link" onclick="toggleAdmin()">관리자 모드</div>
+
+    <div class="admin-link" onclick="toggleAdmin()">관리자 모드 열기/닫기</div>
     <div id="adminArea">
         <input type="password" id="adminPw" placeholder="관리자 비번">
-        <button onclick="loadAdminMsgs()" style="background:#555; color:white;">전체 조회</button>
+        <button onclick="loadAdminMsgs()" style="background:#555; color:white;">전체 데이터 조회</button>
         <div id="adminDisplay"></div>
     </div>
 </div>
@@ -49,27 +51,19 @@
 <script>
     const members = ["안혁진 본부장", "백아현 부본부장", "이분희 본부장", "개청운 부본부장", "가현우 대리", "마천우 대리", "서이준 과장", "한율 대리", "서훈 대리", "가비우 사원", "강승혜사원", "강유진 주임", "게국지 사원", "고봉식 대리", "곽용팔 대리", "구순래 사원", "구윤호 사원", "김선희 사원", "당시아 사원", "루루와 사원", "마풍강 사원", "민지성 사원", "박규식 사원", "박성은 대리", "배하진 인턴", "백은호 사원", "백정훈 과장", "백희 주임", "서여리 주임", "서윤서 사원", "서윤제 주임", "선주혜 인턴", "소도리 주임", "소한빈 사원", "신시아 사원", "양해진 대리", "엄흑민 사원", "예규빈 사원", "유여한 대리", "유재민 사원", "윤 택 사원", "윤견 대리", "윤주원 주임", "윤태준 대리", "이다솔 사원", "이동식 대리", "이리나 대리", "이미지 사원", "이아람 대리", "이해미 인턴", "자소희 사원", "장의사 주임", "정 윤 과장", "지산 대리", "차건우 사원", "차지안 사원", "차지온 사원", "차현 사원", "채서린 대리", "채이설 대리", "함채미 사원", "허채헌 사원", "호강세 과장"];
     
-    // ⭐ 여기에 구글 앱스 스크립트 배포 URL을 꼭 넣어주세요!
-    const APP_URL = "여기에_URL을_넣으세요";
+    // ⭐ 여기에 '새 배포'로 받은 URL을 넣어주세요!
+    const APP_URL = "https://script.google.com/macros/s/AKfycbzr4FDJGF42gVPjL9h7IHvbTBTsSXE4EgMB9fRMVQ08i3b6UdkuU2eefZdvy8sKlJxO/exec";
 
-    // 목록 띄우기 실행
     const dataList = document.getElementById('nameList');
-    members.sort().forEach(n => { 
-        const o = document.createElement('option'); 
-        o.value = n; 
-        dataList.appendChild(o); 
-    });
+    members.sort().forEach(n => { const o = document.createElement('option'); o.value = n; dataList.appendChild(o); });
 
     async function writeMsg() {
         const name = document.getElementById('targetName').value;
         const msg = document.getElementById('message').value;
         if(!msg) return alert("내용을 입력하세요.");
-        // '전체' 혹은 리스트에 있는 이름만 가능
-        if(name !== "전체" && !members.includes(name)) return alert("목록에 있는 이름을 선택하거나 '전체'라고 입력하세요.");
-        
+        if(name !== "전체" && !members.includes(name)) return alert("이름을 선택하거나 '전체'라고 입력하세요.");
         await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'write', name, msg }) });
-        alert("보냈습니다!"); 
-        location.reload();
+        alert("전송 완료!"); location.reload();
     }
 
     async function readMsg() {
@@ -77,30 +71,22 @@
         const pw = document.getElementById('myPw').value;
         const disp = document.getElementById('display');
         if(!name || !pw) return alert("이름과 비번을 입력하세요.");
-        disp.innerHTML = "불러오는 중...";
-        
-        try {
-            const res = await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'read', name, pw }) });
-            const msgs = await res.json(); 
-            
-            disp.innerHTML = msgs.length ? "" : "내용이 없거나 비밀번호가 틀렸습니다.";
-            
-            msgs.reverse().forEach(m => {
-                // 이름이 '전체'인 경우와 본인인 경우 구분
-                const isAll = (m.name === "전체" || m.sender === "전체");
-                disp.innerHTML += `
-                    <div class="msg-card ${isAll ? 'notice-card' : ''}">
-                        ${isAll ? '<div class="notice-tag">📢 전체공지</div>' : ''}
-                        <div class="msg-text">${m.msg}</div>
-                        <div class="msg-footer">
-                            <span class="msg-time">${new Date(m.time).toLocaleDateString()}</span>
-                            ${!isAll ? `<button class="btn-del-req" onclick="requestDelete('${name}', '${m.msg}')">삭제요청</button>` : ''}
-                        </div>
-                    </div>`;
-            });
-        } catch(e) { 
-            disp.innerHTML = "오류가 발생했습니다. URL을 확인해주세요."; 
-        }
+        disp.innerHTML = "로딩 중...";
+        const res = await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'read', name, pw }) });
+        const msgs = await res.json();
+        if(msgs.length === 0) { disp.innerHTML = "편지가 없거나 비번이 틀렸습니다."; return; }
+        disp.innerHTML = "";
+        msgs.reverse().forEach(m => {
+            const isAll = (m.name === "전체");
+            disp.innerHTML += `<div class="msg-card ${isAll ? 'notice-card' : ''}">
+                ${isAll ? '<div class="notice-tag">📢 전체공지</div>' : ''}
+                <div class="msg-text">${m.msg}</div>
+                <div class="msg-footer">
+                    <span class="msg-time">${new Date(m.time).toLocaleDateString()}</span>
+                    ${!isAll ? `<button class="btn-del-req" onclick="requestDelete('${name}', '${m.msg}')">삭제요청</button>` : ''}
+                </div>
+            </div>`;
+        });
     }
 
     function toggleAdmin() { const a = document.getElementById('adminArea'); a.style.display = a.style.display === 'none' ? 'block' : 'none'; }
@@ -109,20 +95,11 @@
         const res = await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminRead', pw }) });
         const data = await res.json();
         const disp = document.getElementById('adminDisplay');
-        if(data.length === 0) { disp.innerHTML = "권한이 없습니다."; return; }
-        disp.innerHTML = data.map(m => `<div style="background:#eee; padding:10px; margin-top:5px; border-radius:8px;"><b>[${m.name}]</b> ${m.msg} <br><button onclick="adminDelete(${m.id})" style="background:red; color:white; font-size:10px; width:auto; padding:2px 5px;">진짜삭제</button></div>`).join('');
+        if(data.length === 0) { disp.innerHTML = "비번 틀림"; return; }
+        disp.innerHTML = data.map(m => `<div style="padding:10px; border-bottom:1px solid #ddd; font-size:13px; color:${m.isRequest==='Y'?'red':'black'}"><b>[${m.name}]</b> ${m.msg} <button onclick="adminDelete(${m.id})" style="width:auto; padding:2px 5px; background:red; color:white; font-size:10px;">삭제</button></div>`).join('');
     }
-    async function adminDelete(rowId) {
-        if(!confirm("정말 지웁니까?")) return;
-        const pw = document.getElementById('adminPw').value;
-        await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminDelete', pw, rowId }) });
-        alert("삭제됨"); loadAdminMsgs();
-    }
-    async function requestDelete(name, msg) {
-        if(!confirm("운영자에게 삭제를 요청할까요?")) return;
-        await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'requestDelete', name, msg }) });
-        alert("요청되었습니다.");
-    }
+    async function adminDelete(rowId) { if(confirm("삭제할까요?")) { const pw = document.getElementById('adminPw').value; await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminDelete', pw, rowId }) }); alert("삭제됨"); loadAdminMsgs(); } }
+    async function requestDelete(name, msg) { if(confirm("삭제 요청할까요?")) { await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'requestDelete', name, msg }) }); alert("요청됨"); } }
 </script>
 </body>
 </html>
