@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리들만의 롤링페이퍼</title>
+    <style>
+        body { font-family: 'Apple SD Gothic Neo', sans-serif; background-color: #f5f7f9; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #333; margin-bottom: 25px; font-size: 20px; }
+        label { font-size: 13px; color: #888; margin-bottom: 5px; display: block; padding-left: 5px; }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; background: #fafafa; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
+        .btn-write { background-color: #00c853; color: white; }
+        .btn-read { background-color: #2979ff; color: white; }
+        .msg-card { background: #fff; padding: 15px; margin-top: 10px; border-radius: 12px; border: 1px solid #f0f0f0; border-left: 5px solid #ffd600; position: relative; }
+        .msg-time { font-size: 11px; color: #bbb; text-align: right; margin-top: 8px; }
+        .btn-del-req { font-size: 11px; color: #ff5252; background: none; border: 1px solid #ff5252; padding: 4px 8px; cursor: pointer; border-radius: 5px; position: absolute; top: 10px; right: 10px; }
+        .admin-link { margin-top: 40px; font-size: 12px; color: #ddd; cursor: pointer; }
+        hr { margin: 30px 0; border: 0; border-top: 1px solid #eee; }
+        .admin-box { background: #333; color: white; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 12px; position: relative; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>✍️ 편지 남기기</h2>
+    <label>받는 사람</label>
+    <input list="nameList" id="targetName" placeholder="이름 검색/선택">
+    <datalist id="nameList"></datalist>
+    <textarea id="message" rows="4" placeholder="메시지를 입력하세요"></textarea>
+    <button class="btn-write" onclick="writeMsg()">편지 보내기</button>
+
+    <hr>
+
+    <h2>🔐 내 편지함 확인</h2>
+    <label>내 이름</label>
+    <input list="nameList" id="myName" placeholder="내 이름 검색/선택">
+    <label>비밀번호</label>
+    <input type="password" id="myPw" placeholder="나만 아는 비밀번호 입력">
+    <button class="btn-read" onclick="readMsg()">보안 열람하기</button>
+    <div id="display"></div>
+
+    <div class="admin-link" onclick="toggleAdmin()">관리자 모드</div>
+    <div id="adminArea" style="display:none; width: 100%;">
+        <input type="password" id="adminPw" placeholder="관리자 비번">
+        <button onclick="loadAdminMsgs()" style="background:#555; color:white;">전체 조회</button>
+        <div id="adminDisplay"></div>
+    </div>
+</div>
+
+<script>
+    const members = ["안혁진 본부장", "백아현 부본부장", "이분희 본부장", "개청운 부본부장", "가현우 대리", "마천우 대리", "서이준 과장", "한율 대리", "서훈 대리", "가비우 사원", "강승혜사원", "강유진 주임", "게국지 사원", "고봉식 대리", "곽용팔 대리", "구순래 사원", "구윤호 사원", "김선희 사원", "당시아 사원", "루루와 사원", "마풍강 사원", "민지성 사원", "박규식 사원", "박성은 대리", "배하진 인턴", "백은호 사원", "백정훈 과장", "백희 주임", "서여리 주임", "서윤서 사원", "서윤제 주임", "선주혜 인턴", "소도리 주임", "소한빈 사원", "신시아 사원", "양해진 대리", "엄흑민 사원", "예규빈 사원", "유여한 대리", "유재민 사원", "윤 택 사원", "윤견 대리", "윤주원 주임", "윤태준 대리", "이다솔 사원", "이동식 대리", "이리나 대리", "이미지 사원", "이아람 대리", "이해미 인턴", "자소희 사원", "장의사 주임", "정 윤 과장", "지산 대리", "차건우 사원", "차지안 사원", "차지온 사원", "차현 사원", "채서린 대리", "채이설 대리", "함채미 사원", "허채헌 사원", "호강세 과장"];
+    
+    // ⭐ 중요: 배포 후 나온 새 URL을 여기에 꼭 넣으세요!
+    const APP_URL = "https://script.google.com/macros/s/AKfycbyBhPfBgA2x9Su2LfvPVRKfwxl3iDtsyw84kQjz3XnUCfnn26egnVXnWOajzvGaFH0P/exec";
+
+    const dataList = document.getElementById('nameList');
+    members.sort().forEach(n => { const o = document.createElement('option'); o.value = n; dataList.appendChild(o); });
+
+    async function writeMsg() {
+        const name = document.getElementById('targetName').value;
+        const msg = document.getElementById('message').value;
+        if(!members.includes(name) || !msg) return alert("입력을 확인하세요.");
+        await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'write', name, msg }) });
+        alert("보냈습니다!"); location.reload();
+    }
+
+    async function readMsg() {
+        const name = document.getElementById('myName').value;
+        const pw = document.getElementById('myPw').value;
+        const disp = document.getElementById('display');
+        disp.innerHTML = "불러오는 중...";
+        const res = await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'read', name, pw }) });
+        const msgs = await res.json();
+        disp.innerHTML = msgs.length ? "" : "내용이 없거나 비번이 틀렸습니다.";
+        msgs.reverse().forEach(m => {
+            disp.innerHTML += `<div class="msg-card">
+                <button class="btn-del-req" onclick="requestDelete('${name}', '${m.msg}')">삭제요청</button>
+                ${m.msg}<div class="msg-time">${new Date(m.time).toLocaleDateString()}</div>
+            </div>`;
+        });
+    }
+
+    async function requestDelete(name, msg) {
+        if(!confirm("운영자에게 삭제를 요청할까요?")) return;
+        await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'requestDelete', name, msg }) });
+        alert("요청되었습니다.");
+    }
+
+    function toggleAdmin() { const a = document.getElementById('adminArea'); a.style.display = a.style.display === 'none' ? 'block' : 'none'; }
+
+    async function loadAdminMsgs() {
+        const pw = document.getElementById('adminPw').value;
+        const res = await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminRead', pw }) });
+        const data = await res.json();
+        const disp = document.getElementById('adminDisplay');
+        if(data.length === 0) { disp.innerHTML = "비번이 틀렸거나 데이터가 없습니다."; return; }
+        disp.innerHTML = data.map(m => `
+            <div class="admin-box" style="${m.isRequest === 'Y' ? 'border:2px solid red;' : ''}">
+                [${m.name}] ${m.msg} 
+                <button onclick="adminDelete(${m.id})" style="width:auto; padding:2px; background:red; color:white; border:none; cursor:pointer;">진짜삭제</button>
+            </div>
+        `).join('');
+    }
+
+    async function adminDelete(rowId) {
+        if(!confirm("정말 지웁니까?")) return;
+        const pw = document.getElementById('adminPw').value;
+        await fetch(APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminDelete', pw, rowId }) });
+        alert("삭제됨"); loadAdminMsgs();
+    }
+</script>
+</body>
+</html>
